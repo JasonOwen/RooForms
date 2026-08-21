@@ -111,6 +111,21 @@ body {
 		</div>
 
 		<script src="RooForms.js"></script>
+<script>
+    // Append a unique build version or timestamp to Godot's resource requests 
+    // to bypass GitHub Pages CDN and mobile carrier caching.
+    const BUILD_VERSION = Date.now(); // Or change this manually to your commit hash/version string on export
+    
+    const originalFetch = window.fetch;
+    window.fetch = async function(resource, init) {
+        if (typeof resource === 'string' && (resource.endsWith('.pck') || resource.endsWith('.wasm') || resource.endsWith('.js'))) {
+            const separator = resource.includes('?') ? '&' : '?';
+            resource = `${resource}${separator}v=${BUILD_VERSION}`;
+        }
+        return originalFetch(resource, init);
+    };
+</script>
+
 		<script>
 window.reloadApp = async function() {
     console.log("Forcing deep application refresh...");
