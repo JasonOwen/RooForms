@@ -112,7 +112,7 @@ body {
 
 		<script src="RooForms.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"RooForms","experimentalVK":false,"fileSizes":{"RooForms.pck":741624,"RooForms.wasm":37695054},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"RooForms.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"RooForms","experimentalVK":false,"fileSizes":{"RooForms.pck":741560,"RooForms.wasm":37695054},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"RooForms.service.worker2.js"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -123,6 +123,48 @@ const engine = new Engine(GODOT_CONFIG);
 
 	let initializing = true;
 	let statusMode = '';
+
+	// --- Begin PWA Update Sync Logic ---
+	let newWorker;
+	window.pwaUpdateAvailable = false;
+
+	if ('serviceWorker' in navigator && GODOT_CONFIG['serviceWorker']) {
+		// Monitor the service worker registration
+		navigator.serviceWorker.register(GODOT_CONFIG['serviceWorker']).then((reg) => {
+			if (reg.waiting) {
+				newWorker = reg.waiting;
+				window.pwaUpdateAvailable = true;
+			}
+
+			reg.addEventListener('updatefound', () => {
+				newWorker = reg.installing;
+				newWorker.addEventListener('statechange', () => {
+					if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+						window.pwaUpdateAvailable = true;
+					}
+				});
+			});
+		});
+
+		// Trigger automatic reload once the service worker activates the new code
+		let refreshing = false;
+		navigator.serviceWorker.addEventListener('controllerchange', () => {
+			if (!refreshing) {
+				window.location.reload();
+				refreshing = true;
+			}
+		});
+	}
+
+	// Exposed globally so Godot can fire it on button click via JavaScriptBridge
+	window.skipPwaWaiting = function() {
+		if (newWorker) {
+			newWorker.postMessage({ action: 'skipWaiting' });
+		} else {
+			window.location.reload();
+		}
+	};
+	// --- End PWA Update Sync Logic ---
 
 	function setStatusMode(mode) {
 		if (statusMode === mode || !initializing) {
@@ -218,4 +260,3 @@ const engine = new Engine(GODOT_CONFIG);
 		</script>
 	</body>
 </html>
-
