@@ -128,37 +128,51 @@ body {
 
 		<script>
 window.reloadApp = async function() {
-    console.log("Forcing deep application refresh...");
-
-    // 1. Wipe out all local browser Cache Storage instances completely
-    if ('caches' in window) {
-        try {
-            const keys = await caches.keys();
-            await Promise.all(keys.map(key => caches.delete(key)));
-            console.log("Service Worker caches cleared.");
-        } catch (e) {
-            console.warn("Failed to clear caches:", e);
-        }
+    // 1. Quick check if the browser knows it's offline
+    if (!navigator.onLine) {
+        console.log("App is offline. Skipping reload to preserve local state.");
+        return; // Exit immediately, do nothing
     }
 
-    // 2. Unregister service workers so they don't serve old cached entries
+    // 2. Double-check by attempting to ping your server/manifest
+    try {
+        // We fetch a lightweight asset (like your manifest or index file) with a cache-buster
+        // to verify we actually have an active route to the internet/server.
+        const response = await fetch('./manifest.webmanifest?ping=' + Date.now(), { 
+            method: 'HEAD',
+            cache: 'no-store' 
+        });
+        
+        if (!response.ok) {
+            throw new Error("Server unreachable");
+        }
+    } catch (err) {
+        console.log("Cannot contact server. Aborting reload to keep local app safe.", err);
+        return; // Exit without clearing caches or reloading
+    }
+
+    // 3. If connection is verified, proceed with your standard safe update/reload sequence
+    console.log("Server connection verified. Proceeding with update...");
+
     if ('serviceWorker' in navigator) {
         try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-                await registration.unregister();
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration) {
+                await registration.update();
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage('update');
+                    return;
+                }
             }
-            console.log("Service workers unregistered.");
         } catch (e) {
-            console.warn("Failed to unregister service worker:", e);
+            console.warn("Service worker update check failed:", e);
         }
     }
 
-    // 3. Force reload the page from the network with a unique timestamp to bypass mobile proxy/CDN caching
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('v', Date.now());
-    window.location.href = currentUrl.toString();
+    // Standard fallback reload if service worker messaging isn't used
+    window.location.reload();
 };
+
 // Optional: Automatically reload all tabs if a service worker takes over in the background
 let refreshing = false;
 navigator.serviceWorker.addEventListener('controllerchange', () => {
