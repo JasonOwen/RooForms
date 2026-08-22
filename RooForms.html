@@ -114,7 +114,7 @@ body {
 <script>
     // Append a unique build version or timestamp to Godot's resource requests 
     // to bypass GitHub Pages CDN and mobile carrier caching.
-    const BUILD_VERSION = Date.now(); // Or change this manually to your commit hash/version string on export
+/*    const BUILD_VERSION = Date.now(); // Or change this manually to your commit hash/version string on export
     
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
@@ -123,7 +123,7 @@ body {
             resource = `${resource}${separator}v=${BUILD_VERSION}`;
         }
         return originalFetch(resource, init);
-    };
+    };*/
 </script>
 
 		<script>
