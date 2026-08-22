@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1787312586|6236804010';
+const CACHE_VERSION = '1787402717|96366439514';
 /** @type {string} */
 const CACHE_PREFIX = 'RooForms-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
@@ -23,7 +23,6 @@ const FULL_CACHE = CACHED_FILES.concat(CACHEABLE_FILES);
 self.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_FILES)));
 });
-
 
 self.addEventListener('activate', (event) => {
 	event.waitUntil(caches.keys().then(
@@ -143,15 +142,11 @@ self.addEventListener(
 	}
 );
 
-
 self.addEventListener('message', (event) => {
 	// No cross origin
 	if (event.origin !== self.origin) {
 		return;
 	}
-    if (event.data === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
 	const id = event.source.id || '';
 	const msg = event.data || '';
 	// Ensure it's one of our clients.
