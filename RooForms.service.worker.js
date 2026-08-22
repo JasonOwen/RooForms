@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1787402717|96366439514';
+const CACHE_VERSION = '1787403632|71619303';
 /** @type {string} */
 const CACHE_PREFIX = 'RooForms-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
